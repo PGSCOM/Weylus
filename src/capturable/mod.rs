@@ -15,6 +15,8 @@ pub mod testsrc;
 pub mod captrs_capture;
 #[cfg(target_os = "windows")]
 pub mod win_ctx;
+#[cfg(target_os = "windows")]
+pub mod win_graphics_capture;
 #[cfg(target_os = "linux")]
 pub mod x11;
 pub trait Recorder {
@@ -121,21 +123,34 @@ pub fn get_capturables(
             }
             Err(err) => warn!("Failed to get list of windows via CoreGraphics: {}", err),
         }
-    }
-
-    #[cfg(target_os = "windows")]
+    }    #[cfg(target_os = "windows")]
     {
-        use crate::capturable::captrs_capture::CaptrsCapturable;
-        use crate::capturable::win_ctx::WinCtx;
-        let winctx = WinCtx::new();
-        for (i, o) in winctx.get_outputs().iter().enumerate() {
-            let captr = CaptrsCapturable::new(
-                i as u8,
-                String::from_utf16_lossy(o.DeviceName.as_ref()),
-                o.DesktopCoordinates,
-                winctx.get_union_rect().clone(),
-            );
-            capturables.push(Box::new(captr));
+        // Primero intentar usar Windows Graphics Capture API
+        match win_graphics_capture::WinGraphicsCaptureCapturable::new_primary_monitor() {
+            Ok(c) => {
+                capturables.push(Box::new(c));
+                // Si WGC funciona, no necesitamos captrs como fallback
+            }
+            Err(e) => {
+                warn!(
+                    "Failed to initialize Windows Graphics Capture for primary monitor: {}",
+                    e
+                );
+                
+                // Fallback a captrs si WGC falla
+                use crate::capturable::captrs_capture::CaptrsCapturable;
+                use crate::capturable::win_ctx::WinCtx;
+                let winctx = WinCtx::new();
+                for (i, o) in winctx.get_outputs().iter().enumerate() {
+                    let captr = CaptrsCapturable::new(
+                        i as u8,
+                        String::from_utf16_lossy(o.DeviceName.as_ref()),
+                        o.DesktopCoordinates,
+                        winctx.get_union_rect().clone(),
+                    );
+                    capturables.push(Box::new(captr));
+                }
+            }
         }
     }
 
