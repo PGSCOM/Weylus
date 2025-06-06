@@ -29,17 +29,17 @@ jobs:
       run: ./docker_build.sh
       shell: bash
     - name: Artifacts1
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: linux
         path: packages/weylus-linux.zip
     - name: Artifacts2
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: linux-deb
         path: packages/Weylus*.deb
     - name: Artifacts3
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: windows
         path: packages/weylus-windows.zip
@@ -75,7 +75,7 @@ jobs:
       run: cargo build --release && cd target/release && tar czf weylus-linux-alpine-musl.tar.gz weylus
       shell: bash
     - name: Artifacts1
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: linux-alpine-musl
         path: target/release/weylus-linux-alpine-musl.tar.gz
@@ -116,14 +116,14 @@ jobs:
     - name: Package
       run: cd target/release/bundle/osx/ && zip -r macOS.zip Weylus.app
     - name: Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ runner.os }}
         path: |
           target/release/bundle/osx/macOS.zip
     - name: ArtifactsDebug
       if: failure()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ runner.os }}-ffbuild
         path: |
